@@ -1,0 +1,85 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 33% 97%;
+    --foreground: 24 15% 21%;
+    --card: 40 30% 98%;
+    --card-foreground: 24 15% 21%;
+    --popover: 40 30% 98%;
+    --popover-foreground: 24 15% 21%;
+    --primary: 20 18% 39%;
+    --primary-foreground: 40 33% 97%;
+    --secondary: 33 20% 91%;
+    --secondary-foreground: 24 15% 21%;
+    --muted: 33 20% 91%;
+    --muted-foreground: 24 8% 46%;
+    --accent: 33 20% 88%;
+    --accent-foreground: 24 15% 21%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 40 33% 97%;
+    --border: 30 15% 88%;
+    --input: 30 15% 88%;
+    --ring: 20 24% 48%;
+    --radius: 1rem;
+  }
+}
+
+html, body {
+  background: #FAF8F5;
+  color: #3E362E;
+}
+
+body {
+  margin: 0;
+  font-family: "Manrope", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: #C98E7B;
+  color: #FFFFFF;
+}
+
+.font-serif { font-family: "Cormorant Garamond", serif; }
+.font-sans { font-family: "Manrope", sans-serif; }
+
+/* Warm textured background */
+.vita-grain {
+  background-image:
+    radial-gradient(1200px 700px at 10% 0%, rgba(201,142,123,0.10), transparent 60%),
+    radial-gradient(900px 700px at 100% 40%, rgba(163,177,155,0.10), transparent 60%),
+    radial-gradient(600px 400px at 20% 100%, rgba(181,167,154,0.15), transparent 65%);
+}
+
+.placeholder-block {
+  background:
+    repeating-linear-gradient(135deg, rgba(181,167,154,0.10) 0 2px, transparent 2px 12px),
+    #EAE5DE;
+  border: 1px dashed rgba(181,167,154,0.55);
+  color: #63584D;
+  border-radius: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #B5A79A; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #7A5C50; }
+
+@layer base {
+  * { @apply border-border; }
+}

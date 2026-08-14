@@ -1,0 +1,31 @@
+{
+  "summary": "Smoke test of Studio Vita backend + frontend. Backend seed data + auth + booking + contact endpoints all return 200. Frontend loads homepage with hero + all 4 journey cards, team page (6 cards), workshops (4 join buttons), FAQ, admin login + full admin dashboard with 5 tabs all working. Booking created via API is visible in admin bookings tab.",
+  "tested_scope": ["frontend", "backend", "auth", "integration"],
+  "passed": [
+    "GET /api/team → 200 (6 members)",
+    "GET /api/services → 200 (10 services)",
+    "GET /api/workshops → 200 (4 workshops)",
+    "POST /api/auth/login → 200, returns bearer token (key='token')",
+    "GET /api/auth/me with Bearer → 200 (admin identity confirmed)",
+    "GET /api/admin/bookings → 200",
+    "GET /api/admin/messages → 200",
+    "POST /api/contact → 200 ok:true",
+    "POST /api/bookings/session → 200, booking_id returned, status='new'",
+    "Homepage renders hero-section + journey-egyeni/gyermek/kapcsolat/csoport",
+    "/szakembereink shows 6 team-card elements",
+    "/programok shows 4 workshop-join buttons",
+    "/gyik page loads",
+    "Admin login flow: fill email/password → redirect to /admin succeeded",
+    "Admin dashboard shows all 5 tabs (bookings/team/services/workshops/messages)",
+    "team-add button visible on Csapat tab, admin-logout visible",
+    "End-to-end integration: API-created booking appears in admin bookings UI"
+  ],
+  "failed": [],
+  "action_items": [
+    "MINOR: Login response uses key 'token' (not 'access_token' as noted in problem statement). Frontend AuthContext must be reading 'token' — confirmed working since login succeeded and /api/auth/me returned 200. No fix needed unless spec strictly requires 'access_token' key."
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "10 console 401 errors observed but expected — they occur when /api/auth/me is called before login on public pages. Email delivery (Resend) not verified end-to-end but booking POST succeeded which is non-fatal for send failures per spec."
+}

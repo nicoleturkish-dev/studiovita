@@ -1,0 +1,84 @@
+{
+  "theme": "light",
+  "typography": {
+    "headings": {
+      "family": "Cormorant Garamond, serif",
+      "weights": ["300", "400", "500", "600"],
+      "usage": "H1-H4, expressive, elegant, soft.",
+      "css_class": "font-serif tracking-tight text-[#3E362E]"
+    },
+    "body": {
+      "family": "Manrope, sans-serif",
+      "weights": ["300", "400", "500", "600"],
+      "usage": "Body text, inputs, labels, navigation.",
+      "css_class": "font-sans leading-relaxed text-[#63584D]"
+    }
+  },
+  "colors": {
+    "background": {
+      "primary": "#FAF8F5",
+      "secondary": "#F3EFEA",
+      "tertiary": "#EAE5DE"
+    },
+    "text": {
+      "primary": "#3E362E",
+      "secondary": "#63584D",
+      "muted": "#9A8F83",
+      "inverse": "#FFFFFF"
+    },
+    "accent": {
+      "terracotta": "#C98E7B",
+      "sage": "#A3B19B",
+      "brown": "#7A5C50",
+      "taupe": "#B5A79A"
+    },
+    "surface": {
+      "white": "#FFFFFF",
+      "cream": "#FCFBF9"
+    }
+  },
+  "visual_enhancers": {
+    "borders": "Soft organic shapes. Use rounded-3xl or rounded-[2rem] for containers, rounded-full for buttons and pills.",
+    "shadows": "Very subtle, warm diffuse shadows. shadow-[0_8px_32px_rgba(62,54,46,0.06)]",
+    "textures": "Subtle grain overlays. Use CSS radial gradients to mimic soft blooms of sage and terracotta in the background.",
+    "placeholders": "CRITICAL: Do NOT use image tags with external URLs. Use styled div blocks. Class example: `w-full h-full min-h-[300px] bg-[#EAE5DE]/40 border-2 border-dashed border-[#B5A79A]/30 rounded-[2rem] flex flex-col items-center justify-center text-[#63584D] p-8 text-center italic font-serif`. Text inside should be descriptive (e.g., 'Mosolygós terapeuta portré', 'Meleg hangulatú, növényekkel teli szoba')."
+  },
+  "layouts": {
+    "marketing": "Generous spacing (py-24 to py-32). Asymmetrical grid layouts. Use padding p-8 inside cards.",
+    "admin": "Denser grid but maintaining the warm color palette. Solid white/cream cards on taupe background.",
+    "booking": "Clear, step-by-step flow. High trust, minimal distractions. Center-aligned multi-step forms with warm accents."
+  },
+  "motion": {
+    "scroll": "Smooth scrolling. Slow, organic transitions.",
+    "transitions": "duration-500 ease-out. Soft fades for page transitions and hover states.",
+    "hover": "Buttons gently lift (-translate-y-1) and increase shadow. Background colors slightly darken."
+  },
+  "components": {
+    "buttons": "Pill-shaped (`rounded-full`). Primary: `bg-[#7A5C50] text-white hover:bg-[#63584D]`. Secondary: `bg-transparent border border-[#B5A79A] text-[#7A5C50] hover:bg-[#F3EFEA]`.",
+    "cards": "Solid soft backgrounds (`bg-white` or `bg-[#FCFBF9]`). Large radii (`rounded-3xl`). 1px subtle border (`border-[#EAE5DE]`).",
+    "header": "Sticky navigation. MUST use solid background or heavy glass (`backdrop-blur-xl bg-[#FAF8F5]/90`). No transparent headers that obscure text.",
+    "forms": "Inputs: `bg-white border-[#EAE5DE] rounded-xl text-[#3E362E] placeholder:text-[#9A8F83]`. Focus: `ring-2 ring-[#A3B19B] outline-none`."
+  },
+  "images": {
+    "strategy": "No images. Use descriptive placeholder blocks exclusively. The client will supply real photos later. Do not use external stock photos.",
+    "urls": []
+  },
+  "accessibility": {
+    "contrast": "Ensure text contrast meets APCA/WCAG standards. Do not use white text on sage or terracotta unless contrast is verified; use deep brown text instead.",
+    "motion": "Respect prefers-reduced-motion for animations.",
+    "attributes": "Add data-testid attributes to all interactive elements (buttons, inputs, links, tabs)."
+  },
+  "instructions_to_main_agent": [
+    "Install Google Fonts 'Cormorant Garamond' and 'Manrope'.",
+    "Configure tailwind.config.js with the custom colors provided in the guidelines.",
+    "The project uses .js/.jsx files NOT .tsx. Generate components in JavaScript and remove TypeScript types.",
+    "For marketing pages (Home, About, Services), use custom HTML/Tailwind for asymmetric, organic layouts.",
+    "For Admin panel and Booking flow, leverage shadcn/ui components heavily but customize them to match the warm, soft, non-corporate aesthetic.",
+    "Strictly follow the requirement for CSS PLACEHOLDER BLOCKS with descriptive Hungarian text. DO NOT render any external image URLs.",
+    "Ensure all text is in Hungarian as requested ('Teret adunk a változásnak.', 'IDŐPONTOT FOGLALOK', stb.).",
+    "Include an Admin dashboard with CRUD operations for team, services, workshops, and bookings.",
+    "Integrate Resend for email notifications.",
+    "Add 'data-testid' attributes to all interactive elements to support robust automated testing."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": "Do not make generic centered layouts. Use asymmetrical layouts and soft organic shapes. Layered shadows and warm tones are required. Never use generic 'AI slop' aesthetics like purple gradients or tech-heavy glowing borders. Use custom scrollbars with no gutter. Always ensure header has a readable background. Use 'sonner' for toast notifications. Do not use placeholder images from external services; build CSS-based descriptive placeholder blocks instead."
+}
