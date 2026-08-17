@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
-import { Placeholder } from "@/components/Placeholder";
+import { Photo } from "@/components/Photo";
 
 export default function Team() {
   const [team, setTeam] = useState([]);
@@ -21,7 +21,9 @@ export default function Team() {
         {team.map((m) => (
           <Link key={m.member_id} to={`/szakembereink/${m.member_id}`} data-testid={`team-card-${m.member_id}`}
             className="group rounded-3xl bg-white border border-[#EAE5DE] overflow-hidden hover:-translate-y-1 transition-all shadow-[0_8px_32px_rgba(62,54,46,0.04)]">
-            <Placeholder label={`Meleg portré — ${m.name}`} minH="min-h-[280px]" className="!rounded-none !border-0 !bg-[#EAE5DE]/60" />
+            <div className="h-[280px] overflow-hidden bg-[#EAE5DE]/60">
+              <Photo url={m.photo_url} label={`Meleg portré — ${m.name}`} minH="h-full" rounded={false} />
+            </div>
             <div className="p-7">
               <h3 className="font-serif text-2xl text-[#3E362E]">{m.name}</h3>
               <p className="text-sm text-[#7A5C50] mt-1">{m.role}</p>

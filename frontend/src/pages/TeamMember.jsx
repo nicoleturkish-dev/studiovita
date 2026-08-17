@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "@/lib/api";
-import { Placeholder } from "@/components/Placeholder";
+import { Photo } from "@/components/Photo";
 
 export default function TeamMember() {
   const { id } = useParams();
@@ -17,7 +17,7 @@ export default function TeamMember() {
 
       <div className="mt-8 grid lg:grid-cols-5 gap-12">
         <div className="lg:col-span-2">
-          <Placeholder label={`Meleg portré — ${m.name}`} minH="min-h-[420px]" />
+          <Photo url={m.photo_url} label={`Meleg portré — ${m.name}`} minH="min-h-[420px]" />
           <Link to={`/foglalas?member=${m.member_id}`} data-testid="member-book-cta"
             className="mt-6 w-full inline-flex justify-center rounded-full bg-[#7A5C50] text-white px-7 py-3.5 tracking-wider hover:bg-[#63584D] transition-all">
             IDŐPONTOT FOGLALOK

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { api, CATEGORY_LABELS } from "@/lib/api";
 import { Placeholder } from "@/components/Placeholder";
+import { Photo } from "@/components/Photo";
 import { Leaf, Users, HeartHandshake, Sprout, Compass, ArrowRight, Quote } from "lucide-react";
 
 const journeys = [
@@ -14,10 +15,14 @@ const journeys = [
 export default function Home() {
   const [team, setTeam] = useState([]);
   const [workshops, setWorkshops] = useState([]);
+  const [spaces, setSpaces] = useState([]);
   useEffect(() => {
     api.get("/team").then((r) => setTeam(r.data.slice(0, 4))).catch(() => {});
     api.get("/workshops").then((r) => setWorkshops(r.data.slice(0, 3))).catch(() => {});
+    api.get("/spaces").then((r) => setSpaces(r.data)).catch(() => {});
   }, []);
+  const heroSpace = spaces.find((s) => s.slot === "hero");
+  const aboutSpace = spaces.find((s) => s.slot === "about");
 
   return (
     <div>
@@ -47,7 +52,7 @@ export default function Home() {
         </div>
         <div className="lg:col-span-5">
           <div className="relative">
-            <Placeholder label="Meleg hangulatú fotó a Studio Vita fogadóteréből — természetes fény, növények, textilek" minH="min-h-[420px]" />
+            <Photo url={heroSpace?.photo_url} label="Meleg hangulatú fotó a Studio Vita fogadóteréből — természetes fény, növények, textilek" minH="min-h-[420px]" />
             <div className="hidden md:block absolute -bottom-8 -left-8 w-40 h-40 rounded-full bg-[#A3B19B]/30 blur-2xl" />
             <div className="hidden md:block absolute -top-6 -right-6 w-28 h-28 rounded-full bg-[#C98E7B]/30 blur-2xl" />
           </div>
@@ -84,7 +89,7 @@ export default function Home() {
       {/* Why Studio Vita */}
       <section className="bg-[#F3EFEA] py-24">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 grid lg:grid-cols-2 gap-16 items-center">
-          <Placeholder label="Interior részlet — bézs textíliák, természetes anyagok, egy csésze tea az asztalon" minH="min-h-[360px]" />
+          <Photo url={aboutSpace?.photo_url} label="Interior részlet — bézs textíliák, természetes anyagok, egy csésze tea az asztalon" minH="min-h-[360px]" />
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-[#C98E7B] mb-4">Miért Studio Vita?</p>
             <h2 className="font-serif text-4xl sm:text-5xl text-[#3E362E]">Szakmai tudás, emberi figyelem.</h2>
@@ -124,7 +129,9 @@ export default function Home() {
           {team.map((m) => (
             <Link key={m.member_id} to={`/szakembereink/${m.member_id}`} data-testid={`home-team-card-${m.member_id}`}
               className="group rounded-3xl bg-white border border-[#EAE5DE] overflow-hidden hover:-translate-y-1 transition-all shadow-[0_8px_32px_rgba(62,54,46,0.04)]">
-              <Placeholder label={`Meleg portré — ${m.name}`} minH="min-h-[220px]" className="!rounded-none !border-0 !bg-[#EAE5DE]/60" />
+              <div className="h-[220px] overflow-hidden bg-[#EAE5DE]/60">
+                <Photo url={m.photo_url} label={`Meleg portré — ${m.name}`} minH="h-full" className="!rounded-none" rounded={false} />
+              </div>
               <div className="p-6">
                 <h3 className="font-serif text-xl text-[#3E362E]">{m.name}</h3>
                 <p className="text-sm text-[#7A5C50] mt-1">{m.role}</p>

@@ -5,8 +5,9 @@ import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Leaf, LogOut, Trash2, Pencil, Plus, Check, X } from "lucide-react";
+import ImageUpload from "@/components/ImageUpload";
 
-function EditableList({ endpoint, adminEndpoint, fields, title, blank, testKey, extra }) {
+function EditableList({ endpoint, adminEndpoint, fields, title, blank, testKey, extra, hasPhoto }) {
   const [items, setItems] = useState([]);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(blank);
@@ -79,6 +80,9 @@ function EditableList({ endpoint, adminEndpoint, fields, title, blank, testKey, 
       {editing && (
         <div className="rounded-2xl bg-[#FCFBF9] border border-[#EAE5DE] p-5 mb-6" data-testid={`${adminEndpoint}-editor`}>
           <div className="grid sm:grid-cols-2 gap-3">
+            {hasPhoto && (
+              <ImageUpload value={form.photo_url || ""} onChange={(v) => setForm({ ...form, photo_url: v })} label="Fotó" />
+            )}
             {fields.map(renderField)}
           </div>
           <div className="mt-4 flex gap-2">
@@ -188,7 +192,19 @@ export default function AdminDashboard() {
     { key: "works_with", label: "Kikkel dolgozik (vesszővel)" }, { key: "order", label: "Sorrend", type: "number" },
     { key: "bio", label: "Bemutatkozás", type: "textarea" }, { key: "active", label: "Aktív", type: "bool" },
   ];
-  const teamBlank = { name: "", role: "", specialties: [], qualifications: [], methods: [], languages: ["Magyar"], works_with: [], bio: "", order: 0, active: true };
+  const teamBlank = { name: "", role: "", specialties: [], qualifications: [], methods: [], languages: ["Magyar"], works_with: [], bio: "", order: 0, active: true, photo_url: "" };
+
+  const spaceFields = [
+    { key: "label", label: "Rövid felirat" },
+    { key: "slot", label: "Hely", type: "select", options: [
+      { value: "hero", label: "Hero (kezdőlap)" },
+      { value: "about", label: "Rólunk" },
+      { value: "generic", label: "Galéria" },
+    ]},
+    { key: "order", label: "Sorrend", type: "number" },
+    { key: "caption", label: "Rövid leírás", type: "textarea" },
+  ];
+  const spaceBlank = { label: "", caption: "", photo_url: "", slot: "generic", order: 0 };
 
   const serviceFields = [
     { key: "title", label: "Cím" },
@@ -238,18 +254,22 @@ export default function AdminDashboard() {
             <TabsTrigger value="team" data-testid="tab-team" className="rounded-full data-[state=active]:bg-white">Csapat</TabsTrigger>
             <TabsTrigger value="services" data-testid="tab-services" className="rounded-full data-[state=active]:bg-white">Szolgáltatások</TabsTrigger>
             <TabsTrigger value="workshops" data-testid="tab-workshops" className="rounded-full data-[state=active]:bg-white">Programok</TabsTrigger>
+            <TabsTrigger value="spaces" data-testid="tab-spaces" className="rounded-full data-[state=active]:bg-white">Terek</TabsTrigger>
             <TabsTrigger value="messages" data-testid="tab-messages" className="rounded-full data-[state=active]:bg-white">Üzenetek</TabsTrigger>
           </TabsList>
 
           <TabsContent value="bookings" className="mt-8"><BookingsList /></TabsContent>
           <TabsContent value="team" className="mt-8">
-            <EditableList adminEndpoint="team" endpoint="team" fields={teamFields} blank={teamBlank} title="Szakembereink" testKey="member_id" />
+            <EditableList adminEndpoint="team" endpoint="team" fields={teamFields} blank={teamBlank} title="Szakembereink" testKey="member_id" hasPhoto />
           </TabsContent>
           <TabsContent value="services" className="mt-8">
             <EditableList adminEndpoint="services" endpoint="services" fields={serviceFields} blank={serviceBlank} title="Szolgáltatások" testKey="service_id" extra={(it) => CATEGORY_LABELS[it.category]} />
           </TabsContent>
           <TabsContent value="workshops" className="mt-8">
             <EditableList adminEndpoint="workshops" endpoint="workshops" fields={workshopFields} blank={workshopBlank} title="Programok" testKey="workshop_id" extra={(it) => `${it.date} · ${it.instructor}`} />
+          </TabsContent>
+          <TabsContent value="spaces" className="mt-8">
+            <EditableList adminEndpoint="spaces" endpoint="spaces" fields={spaceFields} blank={spaceBlank} title="Terek és galéria" testKey="space_id" hasPhoto extra={(it) => it.slot} />
           </TabsContent>
           <TabsContent value="messages" className="mt-8"><MessagesList /></TabsContent>
         </Tabs>

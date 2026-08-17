@@ -10,6 +10,7 @@ import uuid
 import logging
 import ipaddress
 import httpx
+import requests
 import bcrypt
 import jwt
 from html import escape
@@ -19,7 +20,7 @@ from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Literal
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, UploadFile, File
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field, EmailStr
@@ -39,6 +40,55 @@ EMAIL_BASE_URL = "https://integrations.emergentagent.com"
 EMAIL_KEY = os.environ.get("EMERGENT_EMAIL_KEY", "")
 EMAIL_FROM_NAME = os.environ.get("EMAIL_FROM_NAME", "Studio Vita")
 EMAIL_REPLY_TO = os.environ.get("EMAIL_REPLY_TO")
+
+# --- Object storage ---
+STORAGE_BASE = (os.environ.get("INTEGRATION_PROXY_URL") or "").strip() or "https://integrations.emergentagent.com"
+STORAGE_URL = STORAGE_BASE.rstrip("/") + "/objstore/api/v1/storage"
+EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY", "")
+APP_NAME = "studio-vita"
+_storage_key: Optional[str] = None
+MIME_TYPES = {
+    "jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png",
+    "gif": "image/gif", "webp": "image/webp",
+}
+
+
+def init_storage(force: bool = False) -> str:
+    global _storage_key
+    if _storage_key and not force:
+        return _storage_key
+    resp = requests.post(f"{STORAGE_URL}/init", json={"emergent_key": EMERGENT_LLM_KEY}, timeout=30)
+    resp.raise_for_status()
+    _storage_key = resp.json()["storage_key"]
+    return _storage_key
+
+
+def put_object(path: str, data: bytes, content_type: str) -> dict:
+    key = init_storage()
+    resp = requests.put(
+        f"{STORAGE_URL}/objects/{path}",
+        headers={"X-Storage-Key": key, "Content-Type": content_type},
+        data=data, timeout=120,
+    )
+    if resp.status_code == 404:
+        key = init_storage(force=True)
+        resp = requests.put(
+            f"{STORAGE_URL}/objects/{path}",
+            headers={"X-Storage-Key": key, "Content-Type": content_type},
+            data=data, timeout=120,
+        )
+    resp.raise_for_status()
+    return resp.json()
+
+
+def get_object(path: str) -> tuple:
+    key = init_storage()
+    resp = requests.get(f"{STORAGE_URL}/objects/{path}", headers={"X-Storage-Key": key}, timeout=60)
+    if resp.status_code == 404:
+        key = init_storage(force=True)
+        resp = requests.get(f"{STORAGE_URL}/objects/{path}", headers={"X-Storage-Key": key}, timeout=60)
+    resp.raise_for_status()
+    return resp.content, resp.headers.get("Content-Type", "application/octet-stream")
 
 
 # ================= Password helpers =================
@@ -208,7 +258,18 @@ class TeamMember(BaseModel):
     methods: List[str] = []
     languages: List[str] = ["Magyar"]
     works_with: List[str] = []
+    photo_url: str = ""
     active: bool = True
+    order: int = 0
+    created_at: str = Field(default_factory=now_iso)
+
+
+class Space(BaseModel):
+    space_id: str = Field(default_factory=new_id)
+    label: str
+    caption: str = ""
+    photo_url: str = ""
+    slot: str = "generic"  # "hero" | "about" | "generic"
     order: int = 0
     created_at: str = Field(default_factory=now_iso)
 
@@ -276,6 +337,12 @@ async def lifespan(app: FastAPI):
     await db.services.create_index("service_id", unique=True)
     await db.workshops.create_index("workshop_id", unique=True)
     await db.bookings.create_index("booking_id", unique=True)
+    await db.spaces.create_index("space_id", unique=True)
+    try:
+        init_storage()
+        logger.info("Object storage initialized.")
+    except Exception as e:
+        logger.warning(f"Object storage init failed (uploads will error until fixed): {e}")
     await seed_all()
     yield
     client.close()
@@ -341,6 +408,7 @@ class TeamIn(BaseModel):
     methods: List[str] = []
     languages: List[str] = ["Magyar"]
     works_with: List[str] = []
+    photo_url: str = ""
     active: bool = True
     order: int = 0
 
@@ -638,6 +706,90 @@ async def admin_messages(_=Depends(get_current_admin)):
 @api.get("/")
 async def root():
     return {"app": "Studio Vita", "status": "ok"}
+
+
+# --------- Uploads / Files ---------
+MAX_UPLOAD_BYTES = 8 * 1024 * 1024  # 8 MB
+
+
+@api.post("/admin/uploads")
+async def upload_image(file: UploadFile = File(...), _=Depends(get_current_admin)):
+    ext = (file.filename.rsplit(".", 1)[-1] if file.filename and "." in file.filename else "bin").lower()
+    if ext not in MIME_TYPES:
+        raise HTTPException(400, "Csak JPG, PNG, WEBP vagy GIF képek engedélyezettek.")
+    data = await file.read()
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(400, "A fájl túl nagy (max 8 MB).")
+    ctype = MIME_TYPES[ext]
+    path = f"{APP_NAME}/uploads/{uuid.uuid4()}.{ext}"
+    try:
+        result = put_object(path, data, ctype)
+    except Exception as e:
+        logger.error(f"Upload failed: {e}")
+        raise HTTPException(502, "Sikertelen feltöltés")
+    doc = {
+        "file_id": new_id(),
+        "storage_path": result["path"],
+        "content_type": ctype,
+        "size": result.get("size", len(data)),
+        "is_deleted": False,
+        "created_at": now_iso(),
+    }
+    await db.files.insert_one(doc)
+    return {"url": f"/api/files/{result['path']}", "path": result["path"]}
+
+
+@api.get("/files/{path:path}")
+async def download_file(path: str):
+    record = await db.files.find_one({"storage_path": path, "is_deleted": False}, {"_id": 0})
+    if not record:
+        raise HTTPException(404, "Nem található")
+    try:
+        data, ctype = get_object(path)
+    except Exception:
+        raise HTTPException(404, "Nem található")
+    return Response(content=data, media_type=record.get("content_type") or ctype,
+                    headers={"Cache-Control": "public, max-age=3600"})
+
+
+# --------- Spaces (studio photos) ---------
+@api.get("/spaces")
+async def list_spaces():
+    return await db.spaces.find({}, {"_id": 0}).sort("order", 1).to_list(200)
+
+
+class SpaceIn(BaseModel):
+    label: str
+    caption: str = ""
+    photo_url: str = ""
+    slot: str = "generic"
+    order: int = 0
+
+
+@api.post("/admin/spaces")
+async def create_space(body: SpaceIn, _=Depends(get_current_admin)):
+    s = Space(**body.model_dump())
+    await db.spaces.insert_one(s.model_dump())
+    return s.model_dump()
+
+
+@api.put("/admin/spaces/{space_id}")
+async def update_space(space_id: str, body: SpaceIn, _=Depends(get_current_admin)):
+    res = await db.spaces.update_one({"space_id": space_id}, {"$set": body.model_dump()})
+    if not res.matched_count:
+        raise HTTPException(404, "Nem található")
+    return await db.spaces.find_one({"space_id": space_id}, {"_id": 0})
+
+
+@api.delete("/admin/spaces/{space_id}")
+async def delete_space(space_id: str, _=Depends(get_current_admin)):
+    await db.spaces.delete_one({"space_id": space_id})
+    return {"ok": True}
+
+
+@api.get("/admin/spaces")
+async def admin_list_spaces(_=Depends(get_current_admin)):
+    return await db.spaces.find({}, {"_id": 0}).sort("order", 1).to_list(500)
 
 
 app.include_router(api)
